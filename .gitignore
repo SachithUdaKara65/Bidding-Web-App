@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.*
+
+# Framework and build output
+.next/
+/out/
+dist/
+build/
+.turbo/
+.expo/
+web-build/
+
+# Environment files
+.env*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Local tooling and deployments
+.vercel/
+.nestjs/
+.vscode/*
+!.vscode/extensions.json
+
+# TypeScript and test output
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+*.pem

@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  background: #f3f6f4;
+  color: #172620;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.shell {
+  display: grid;
+  min-height: 100vh;
+  align-content: center;
+  justify-items: start;
+  gap: 1rem;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #426454;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+h1 {
+  max-width: 14ch;
+  margin: 0;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  line-height: 1.02;
+}
+
+.description {
+  max-width: 38rem;
+  margin: 0;
+  color: #4a5b53;
+  line-height: 1.6;
+}
+
+.api-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  background: #17684d;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.api-link:hover {
+  background: #10513c;
+}
