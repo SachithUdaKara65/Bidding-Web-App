@@ -82,7 +82,6 @@ export default function HomePage() {
           <div className="auction-headline">
             <p className="auction-kicker">{t.kicker}</p>
             <h1>{t.title}</h1>
-            <p>{t.intro}</p>
           </div>
         </div>
         <div className="auction-skyline" aria-hidden="true"><span>▥</span><span>▦</span><span>▥</span><span>▦</span><span>▥</span></div>
