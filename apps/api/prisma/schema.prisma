@@ -1,0 +1,230 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  BUYER
+  BIDDER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum OrganizationType {
+  BUYER
+  VENDOR
+}
+
+enum TenderStatus {
+  DRAFT
+  PUBLISHED
+  OPEN_FOR_BIDDING
+  CLOSED
+  UNDER_EVALUATION
+  AWARDED
+  COMPLETED
+  CANCELLED
+}
+
+enum BidStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole   @default(BIDDER)
+  status       UserStatus @default(ACTIVE)
+
+  memberships  OrganizationMember[]
+  bids         Bid[]
+  evaluations  BidEvaluation[]
+  refreshTokens RefreshToken[]
+  auditLogs    AuditLog[]
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model Organization {
+  id                 String           @id @default(uuid())
+  name               String
+  registrationNumber String           @unique
+  type               OrganizationType
+  address            String?
+
+  members            OrganizationMember[]
+  tenders            Tender[]
+  bids               Bid[]
+
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([name])
+}
+
+model OrganizationMember {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  roleInOrg      String       @default("MEMBER")
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, organizationId])
+}
+
+model Tender {
+  id                 String           @id @default(uuid())
+  title              String
+  description        String
+  category           String
+  estimatedBudget    Decimal?         @db.Decimal(12, 2)
+  status             TenderStatus     @default(DRAFT)
+  submissionDeadline DateTime
+  openingDate        DateTime
+
+  buyerOrgId         String
+  buyerOrg           Organization     @relation(fields: [buyerOrgId], references: [id], onDelete: Restrict)
+
+  documents          TenderDocument[]
+  bids               Bid[]
+  award              TenderAward?
+
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([status])
+  @@index([buyerOrgId])
+  @@index([category])
+  @@index([submissionDeadline])
+}
+
+model TenderDocument {
+  id         String   @id @default(uuid())
+  tenderId   String
+  tender     Tender   @relation(fields: [tenderId], references: [id], onDelete: Cascade)
+  fileName   String
+  fileUrl    String
+  fileType   String
+  fileSize   Int
+  uploadedAt DateTime @default(now())
+
+  @@index([tenderId])
+}
+
+model Bid {
+  id                      String         @id @default(uuid())
+  tenderId                String
+  tender                  Tender         @relation(fields: [tenderId], references: [id], onDelete: Restrict)
+  bidderOrgId             String
+  bidderOrg               Organization   @relation(fields: [bidderOrgId], references: [id], onDelete: Restrict)
+  bidderUserId            String
+  bidderUser              User           @relation(fields: [bidderUserId], references: [id], onDelete: Restrict)
+
+  technicalProposal       String
+  financialProposalAmount Decimal        @db.Decimal(12, 2)
+  isSealed                Boolean        @default(true)
+  status                  BidStatus      @default(SUBMITTED)
+
+  documents               BidDocument[]
+  evaluations             BidEvaluation[]
+  awardedTender           TenderAward?
+
+  submittedAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@unique([tenderId, bidderOrgId])
+  @@index([tenderId])
+  @@index([bidderOrgId])
+  @@index([status])
+}
+
+model BidDocument {
+  id           String   @id @default(uuid())
+  bidId        String
+  bid          Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String
+  documentType String
+  uploadedAt   DateTime @default(now())
+
+  @@index([bidId])
+}
+
+model BidEvaluation {
+  id             String   @id @default(uuid())
+  bidId          String
+  bid            Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  evaluatorId    String
+  evaluator      User     @relation(fields: [evaluatorId], references: [id], onDelete: Restrict)
+  technicalScore Float
+  financialScore Float
+  totalScore     Float
+  comments       String?
+  evaluatedAt    DateTime @default(now())
+
+  @@unique([bidId, evaluatorId])
+  @@index([bidId])
+}
+
+model TenderAward {
+  id           String   @id @default(uuid())
+  tenderId     String   @unique
+  tender       Tender   @relation(fields: [tenderId], references: [id], onDelete: Restrict)
+  winningBidId String   @unique
+  winningBid   Bid      @relation(fields: [winningBidId], references: [id], onDelete: Restrict)
+  awardNotes   String?
+  awardedAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  resource   String
+  resourceId String?
+  details    String?
+  ipAddress  String?
+  timestamp  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([timestamp])
+}
