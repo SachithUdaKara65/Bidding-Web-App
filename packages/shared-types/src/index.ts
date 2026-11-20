@@ -88,3 +88,75 @@ export interface JwtPayload {
   iat?: number;
   exp?: number;
 }
+
+// Organization Interfaces
+export interface OrganizationDto {
+  id: string;
+  name: string;
+  registrationNumber: string;
+  type: OrganizationType;
+  address?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrganizationDto {
+  name: string;
+  registrationNumber: string;
+  type: OrganizationType;
+  address?: string;
+}
+
+export interface UpdateOrganizationDto {
+  name?: string;
+  address?: string;
+}
+
+// Tender Interfaces
+export interface TenderDocumentDto {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  uploadedAt: string;
+}
+
+export interface TenderDto {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  estimatedBudget?: number | null;
+  status: TenderStatus;
+  submissionDeadline: string;
+  openingDate: string;
+  buyerOrgId: string;
+  buyerOrg?: {
+    id: string;
+    name: string;
+    registrationNumber: string;
+  };
+  documents?: TenderDocumentDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTenderDto {
+  title: string;
+  description: string;
+  category: string;
+  estimatedBudget?: number;
+  submissionDeadline: string; // ISO 8601 string
+  openingDate: string;        // ISO 8601 string
+  buyerOrgId: string;
+}
+
+export interface UpdateTenderDto {
+  title?: string;
+  description?: string;
+  category?: string;
+  estimatedBudget?: number;
+  submissionDeadline?: string;
+  openingDate?: string;
+}
