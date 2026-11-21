@@ -1,0 +1,36 @@
+FROM node:20-alpine
+
+# Install OpenSSL and libc6-compat for Prisma engine on Alpine
+RUN apk add --no-cache openssl libc6-compat
+
+WORKDIR /app
+
+# Copy root manifest and workspace package.json files for efficient layer caching
+COPY package.json package-lock.json ./
+COPY packages/config/package.json ./packages/config/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/shared-validation/package.json ./packages/shared-validation/
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+
+# Install workspace dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy shared packages and api source code
+COPY packages/ ./packages/
+COPY apps/api/ ./apps/api/
+
+# Build shared packages
+RUN npm run build --workspace @procurement/shared-types
+RUN npm run build --workspace @procurement/shared-validation
+
+# Generate type-safe Prisma Client inside the container
+RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
+
+EXPOSE 3001
+
+ENV NODE_ENV=development
+ENV API_PORT=3001
+ENV API_HOST=0.0.0.0
+
+CMD ["npm", "run", "dev:api"]
