@@ -1,0 +1,32 @@
+FROM node:20-alpine
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy root manifest and workspace package.json files for efficient layer caching
+COPY package.json package-lock.json ./
+COPY packages/config/package.json ./packages/config/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/shared-validation/package.json ./packages/shared-validation/
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+
+# Install workspace dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy shared packages and web source code
+COPY packages/ ./packages/
+COPY apps/web/ ./apps/web/
+
+# Build shared packages
+RUN npm run build --workspace @procurement/shared-types
+RUN npm run build --workspace @procurement/shared-validation
+
+EXPOSE 3000
+
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+CMD ["npm", "run", "dev:web"]
