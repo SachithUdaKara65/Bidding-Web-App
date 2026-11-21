@@ -10,6 +10,15 @@ import {
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { CreateDraftTenderUseCase } from '../../../application/use-cases/tenders/create-draft-tender.use-case';
 import { UpdateDraftTenderUseCase } from '../../../application/use-cases/tenders/update-draft-tender.use-case';
 import { PublishTenderUseCase } from '../../../application/use-cases/tenders/publish-tender.use-case';
@@ -29,6 +38,8 @@ import {
 } from '@procurement/shared-validation';
 import { TenderDto, UserRole, JwtPayload, TenderStatus } from '@procurement/shared-types';
 
+@ApiTags('Tenders')
+@ApiBearerAuth('JWT-auth')
 @Controller('tenders')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TenderController {
@@ -43,6 +54,25 @@ export class TenderController {
 
   @Post()
   @Roles(UserRole.BUYER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Create a new procurement tender in DRAFT status (Buyers only)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['title', 'description', 'category', 'submissionDeadline', 'openingDate', 'buyerOrgId'],
+      properties: {
+        title: { type: 'string', example: 'Enterprise Cloud Infrastructure Services 2026' },
+        description: { type: 'string', example: 'Procurement of dedicated multi-region cloud hosting and SLA services.' },
+        category: { type: 'string', example: 'Cloud Services' },
+        estimatedBudget: { type: 'number', example: 500000 },
+        submissionDeadline: { type: 'string', example: new Date(Date.now() + 7 * 86400000).toISOString() },
+        openingDate: { type: 'string', example: new Date(Date.now() + 8 * 86400000).toISOString() },
+        buyerOrgId: { type: 'string', example: 'your-buyer-org-uuid' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Draft tender created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation failed or deadline is invalid' })
+  @ApiResponse({ status: 403, description: 'Not authorized for this buyer organization' })
   @UsePipes(new ZodValidationPipe(createTenderSchema))
   async create(
     @Body() body: CreateTenderInput,
@@ -53,6 +83,12 @@ export class TenderController {
 
   @Get('my-tenders')
   @Roles(UserRole.BUYER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'List all tenders for a buyer organization' })
+  @ApiQuery({ name: 'buyerOrgId', required: true, description: 'UUID of the buyer organization' })
+  @ApiQuery({ name: 'status', required: false, enum: ['DRAFT', 'PUBLISHED', 'OPEN_FOR_BIDDING', 'CLOSED', 'UNDER_EVALUATION', 'AWARDED', 'CANCELLED'] })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'List of buyer tenders' })
   async getMyTenders(
     @Query('buyerOrgId') buyerOrgId: string,
     @Query('status') status: TenderStatus | undefined,
@@ -68,12 +104,30 @@ export class TenderController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Retrieve full tender details including buyer organization and documents' })
+  @ApiParam({ name: 'id', description: 'Tender UUID' })
+  @ApiResponse({ status: 200, description: 'Tender details' })
+  @ApiResponse({ status: 404, description: 'Tender not found' })
   async getById(@Param('id') id: string): Promise<TenderDto> {
     return this.getTenderDetailsUseCase.execute(id);
   }
 
   @Put(':id')
   @Roles(UserRole.BUYER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Update tender details (Allowed only while status is DRAFT)' })
+  @ApiParam({ name: 'id', description: 'Tender UUID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', example: 'Updated Tender Title' },
+        description: { type: 'string', example: 'Updated detailed tender description here.' },
+        estimatedBudget: { type: 'number', example: 550000 },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Tender updated successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot edit tender after it has been published' })
   @UsePipes(new ZodValidationPipe(updateTenderSchema))
   async update(
     @Param('id') id: string,
@@ -85,6 +139,10 @@ export class TenderController {
 
   @Patch(':id/publish')
   @Roles(UserRole.BUYER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Publish draft tender to OPEN_FOR_BIDDING status' })
+  @ApiParam({ name: 'id', description: 'Tender UUID' })
+  @ApiResponse({ status: 200, description: 'Tender published and open for bids' })
+  @ApiResponse({ status: 400, description: 'Tender not in DRAFT or deadline has passed' })
   async publish(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload
@@ -94,6 +152,10 @@ export class TenderController {
 
   @Patch(':id/cancel')
   @Roles(UserRole.BUYER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Cancel an active or draft tender' })
+  @ApiParam({ name: 'id', description: 'Tender UUID' })
+  @ApiResponse({ status: 200, description: 'Tender status set to CANCELLED' })
+  @ApiResponse({ status: 400, description: 'Cannot cancel an awarded or completed tender' })
   async cancel(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload
