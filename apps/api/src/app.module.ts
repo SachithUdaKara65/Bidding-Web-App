@@ -12,6 +12,8 @@ import { ORGANIZATION_REPOSITORY } from './domain/repositories/organization.repo
 import { PrismaOrganizationRepository } from './infrastructure/database/repositories/prisma-organization.repository';
 import { TENDER_REPOSITORY } from './domain/repositories/tender.repository.interface';
 import { PrismaTenderRepository } from './infrastructure/database/repositories/prisma-tender.repository';
+import { BID_REPOSITORY } from './domain/repositories/bid.repository.interface';
+import { PrismaBidRepository } from './infrastructure/database/repositories/prisma-bid.repository';
 
 // Security Ports & Services
 import { PASSWORD_HASHER } from './application/ports/password-hasher.port';
@@ -37,6 +39,14 @@ import { PublishTenderUseCase } from './application/use-cases/tenders/publish-te
 import { CancelTenderUseCase } from './application/use-cases/tenders/cancel-tender.use-case';
 import { GetBuyerTendersUseCase } from './application/use-cases/tenders/get-buyer-tenders.use-case';
 import { GetTenderDetailsUseCase } from './application/use-cases/tenders/get-tender-details.use-case';
+import { ListPublicTendersUseCase } from './application/use-cases/tenders/list-public-tenders.use-case';
+import { GetPublicTenderDetailsUseCase } from './application/use-cases/tenders/get-public-tender-details.use-case';
+
+// Use Cases - Bids
+import { SubmitBidUseCase } from './application/use-cases/bids/submit-bid.use-case';
+import { GetMyBidsUseCase } from './application/use-cases/bids/get-my-bids.use-case';
+import { GetBidDetailsUseCase } from './application/use-cases/bids/get-bid-details.use-case';
+import { WithdrawBidUseCase } from './application/use-cases/bids/withdraw-bid.use-case';
 
 // Guards
 import { JwtAuthGuard } from './presentation/rest/guards/jwt-auth.guard';
@@ -47,6 +57,7 @@ import { HealthController } from './presentation/rest/controllers/health.control
 import { AuthController } from './presentation/rest/controllers/auth.controller';
 import { OrganizationController } from './presentation/rest/controllers/organization.controller';
 import { TenderController } from './presentation/rest/controllers/tender.controller';
+import { BidController } from './presentation/rest/controllers/bid.controller';
 
 @Module({
   imports: [
@@ -63,6 +74,7 @@ import { TenderController } from './presentation/rest/controllers/tender.control
     AuthController,
     OrganizationController,
     TenderController,
+    BidController,
   ],
   providers: [
     PrismaService,
@@ -81,6 +93,10 @@ import { TenderController } from './presentation/rest/controllers/tender.control
     {
       provide: TENDER_REPOSITORY,
       useClass: PrismaTenderRepository,
+    },
+    {
+      provide: BID_REPOSITORY,
+      useClass: PrismaBidRepository,
     },
     {
       provide: PASSWORD_HASHER,
@@ -106,6 +122,13 @@ import { TenderController } from './presentation/rest/controllers/tender.control
     CancelTenderUseCase,
     GetBuyerTendersUseCase,
     GetTenderDetailsUseCase,
+    ListPublicTendersUseCase,
+    GetPublicTenderDetailsUseCase,
+    // Bid Use Cases
+    SubmitBidUseCase,
+    GetMyBidsUseCase,
+    GetBidDetailsUseCase,
+    WithdrawBidUseCase,
     // Guards
     JwtAuthGuard,
     RolesGuard,
@@ -116,6 +139,7 @@ import { TenderController } from './presentation/rest/controllers/tender.control
     USER_REPOSITORY,
     ORGANIZATION_REPOSITORY,
     TENDER_REPOSITORY,
+    BID_REPOSITORY,
   ],
 })
 export class AppModule {}
