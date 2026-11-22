@@ -27,6 +27,16 @@ export interface FindTendersOptions {
   offset?: number;
 }
 
+export interface PublicTenderQuery {
+  search?: string;
+  category?: string;
+  minBudget?: number;
+  maxBudget?: number;
+  status?: TenderStatus;
+  limit?: number;
+  offset?: number;
+}
+
 export interface TenderWithDetails {
   tender: TenderEntity;
   buyerOrg: {
@@ -51,6 +61,7 @@ export interface ITenderRepository {
   findById(id: string): Promise<TenderEntity | null>;
   findWithDetails(id: string): Promise<TenderWithDetails | null>;
   findByBuyerOrg(buyerOrgId: string, options?: FindTendersOptions): Promise<{ tenders: TenderEntity[]; total: number }>;
+  findPublicTenders(query: PublicTenderQuery): Promise<{ tenders: TenderWithDetails[]; total: number }>;
   update(id: string, data: UpdateTenderData): Promise<TenderEntity | null>;
   updateStatus(id: string, status: TenderStatus): Promise<TenderEntity | null>;
 }

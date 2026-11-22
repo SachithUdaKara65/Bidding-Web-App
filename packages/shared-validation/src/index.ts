@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRole, OrganizationType } from '@procurement/shared-types';
+import { UserRole, OrganizationType, TenderStatus } from '@procurement/shared-types';
 
 // Auth Validation Schemas
 export const registerSchema = z.object({
@@ -133,3 +133,37 @@ export const updateTenderSchema = z.object({
 });
 
 export type UpdateTenderInput = z.infer<typeof updateTenderSchema>;
+
+export const publicTenderQuerySchema = z.object({
+  search: z.string().trim().optional(),
+  category: z.string().trim().optional(),
+  minBudget: z.coerce.number().positive().optional(),
+  maxBudget: z.coerce.number().positive().optional(),
+  status: z
+    .enum([
+      TenderStatus.OPEN_FOR_BIDDING,
+      TenderStatus.PUBLISHED,
+      TenderStatus.CLOSED,
+    ])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+export type PublicTenderQueryInput = z.infer<typeof publicTenderQuerySchema>;
+
+// Bid Validation Schemas
+export const submitBidSchema = z.object({
+  bidderOrgId: z
+    .string()
+    .uuid({ message: 'Valid bidder organization ID is required' }),
+  technicalProposal: z
+    .string()
+    .trim()
+    .min(20, { message: 'Technical proposal must be at least 20 characters long' }),
+  financialProposalAmount: z
+    .number()
+    .positive({ message: 'Financial proposal amount must be greater than 0' }),
+});
+
+export type SubmitBidInput = z.infer<typeof submitBidSchema>;

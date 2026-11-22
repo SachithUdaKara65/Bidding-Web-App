@@ -160,3 +160,60 @@ export interface UpdateTenderDto {
   submissionDeadline?: string;
   openingDate?: string;
 }
+
+export interface PublicTenderQueryDto {
+  search?: string;
+  category?: string;
+  minBudget?: number;
+  maxBudget?: number;
+  status?: TenderStatus;
+  limit?: number;
+  offset?: number;
+}
+
+// Bid Interfaces
+export interface BidDocumentDto {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  documentType: string;
+  uploadedAt: string;
+}
+
+export interface BidDto {
+  id: string;
+  tenderId: string;
+  bidderOrgId: string;
+  bidderOrg?: {
+    id: string;
+    name: string;
+    registrationNumber: string;
+  };
+  bidderUserId: string;
+  technicalProposal: string;
+  financialProposalAmount: number;
+  isSealed: boolean;
+  status: BidStatus;
+  documents?: BidDocumentDto[];
+  submittedAt: string;
+  updatedAt: string;
+}
+
+export interface MaskedBidDto {
+  id: string;
+  tenderId: string;
+  bidderOrgId: string;
+  bidderOrg?: {
+    id: string;
+    name: string;
+  };
+  isSealed: true;
+  status: BidStatus;
+  submittedAt: string;
+}
+
+export interface SubmitBidDto {
+  bidderOrgId: string;
+  technicalProposal: string;
+  financialProposalAmount: number;
+}

@@ -4,6 +4,7 @@ import {
   CreateTenderData,
   UpdateTenderData,
   FindTendersOptions,
+  PublicTenderQuery,
   TenderWithDetails,
 } from '../../../domain/repositories/tender.repository.interface';
 import { TenderEntity } from '../../../domain/entities/tender.entity';
@@ -93,6 +94,83 @@ export class PrismaTenderRepository implements ITenderRepository {
 
     return {
       tenders: records.map((r) => this.toEntity(r)),
+      total,
+    };
+  }
+
+  async findPublicTenders(
+    query: PublicTenderQuery
+  ): Promise<{ tenders: TenderWithDetails[]; total: number }> {
+    const allowedStatuses: TenderStatus[] = [
+      TenderStatus.OPEN_FOR_BIDDING,
+      TenderStatus.PUBLISHED,
+      TenderStatus.CLOSED,
+    ];
+
+    const statusFilter = query.status
+      ? (allowedStatuses.includes(query.status) ? query.status : TenderStatus.OPEN_FOR_BIDDING)
+      : { in: allowedStatuses as any };
+
+    const where: Prisma.TenderWhereInput = {
+      status: statusFilter as any,
+      ...(query.search
+        ? {
+            OR: [
+              { title: { contains: query.search, mode: 'insensitive' } },
+              { description: { contains: query.search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+      ...(query.category
+        ? { category: { equals: query.category, mode: 'insensitive' } }
+        : {}),
+      ...(query.minBudget !== undefined || query.maxBudget !== undefined
+        ? {
+            estimatedBudget: {
+              ...(query.minBudget !== undefined
+                ? { gte: new Prisma.Decimal(query.minBudget) }
+                : {}),
+              ...(query.maxBudget !== undefined
+                ? { lte: new Prisma.Decimal(query.maxBudget) }
+                : {}),
+            },
+          }
+        : {}),
+    };
+
+    const [records, total] = await Promise.all([
+      this.prisma.tender.findMany({
+        where,
+        include: {
+          buyerOrg: {
+            select: {
+              id: true,
+              name: true,
+              registrationNumber: true,
+            },
+          },
+          documents: true,
+        },
+        orderBy: { submissionDeadline: 'asc' },
+        take: query.limit ?? 20,
+        skip: query.offset ?? 0,
+      }),
+      this.prisma.tender.count({ where }),
+    ]);
+
+    return {
+      tenders: records.map((r) => ({
+        tender: this.toEntity(r),
+        buyerOrg: r.buyerOrg,
+        documents: r.documents.map((d) => ({
+          id: d.id,
+          fileName: d.fileName,
+          fileUrl: d.fileUrl,
+          fileType: d.fileType,
+          fileSize: d.fileSize,
+          uploadedAt: d.uploadedAt,
+        })),
+      })),
       total,
     };
   }
