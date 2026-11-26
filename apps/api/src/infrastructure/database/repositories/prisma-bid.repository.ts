@@ -146,6 +146,14 @@ export class PrismaBidRepository implements IBidRepository {
     return this.toEntity(record);
   }
 
+  async unsealBid(id: string): Promise<BidEntity | null> {
+    const record = await this.prisma.bid.update({
+      where: { id },
+      data: { isSealed: false },
+    });
+    return this.toEntity(record);
+  }
+
   private toEntity(record: any): BidEntity {
     return new BidEntity(
       record.id,

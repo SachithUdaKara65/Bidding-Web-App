@@ -217,3 +217,49 @@ export interface SubmitBidDto {
   technicalProposal: string;
   financialProposalAmount: number;
 }
+
+// ─── Phase 4: Evaluation & Awarding ─────────────────────────────────────────
+
+export interface BidEvaluationDto {
+  id: string;
+  bidId: string;
+  evaluatorId: string;
+  technicalScore: number;    // 0–100
+  financialScore: number;    // 0–100
+  totalScore: number;        // weighted composite
+  comments?: string | null;
+  evaluatedAt: string;
+}
+
+export interface SubmitEvaluationDto {
+  technicalScore: number;
+  financialScore: number;
+  comments?: string;
+}
+
+export interface TenderEvaluationSummaryDto {
+  tenderId: string;
+  tenderTitle: string;
+  status: TenderStatus;
+  bids: Array<{
+    bid: BidDto;
+    evaluations: BidEvaluationDto[];
+    averageTechnicalScore: number;
+    averageFinancialScore: number;
+    averageTotalScore: number;
+  }>;
+}
+
+export interface AwardTenderDto {
+  winningBidId: string;
+  awardNotes?: string;
+}
+
+export interface TenderAwardDto {
+  id: string;
+  tenderId: string;
+  winningBidId: string;
+  winningBid?: BidDto;
+  awardNotes?: string | null;
+  awardedAt: string;
+}

@@ -37,4 +37,5 @@ export interface IBidRepository {
   findByUserOrgs(orgIds: string[]): Promise<BidWithDetails[]>;
   findByTender(tenderId: string): Promise<BidWithDetails[]>;
   updateStatus(id: string, status: BidStatus): Promise<BidEntity | null>;
+  unsealBid(id: string): Promise<BidEntity | null>;
 }

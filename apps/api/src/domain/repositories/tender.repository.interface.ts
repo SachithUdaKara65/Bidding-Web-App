@@ -19,6 +19,7 @@ export interface UpdateTenderData {
   estimatedBudget?: number | null;
   submissionDeadline?: Date;
   openingDate?: Date;
+  status?: TenderStatus;
 }
 
 export interface FindTendersOptions {

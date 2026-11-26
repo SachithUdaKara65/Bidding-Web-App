@@ -14,6 +14,10 @@ import { TENDER_REPOSITORY } from './domain/repositories/tender.repository.inter
 import { PrismaTenderRepository } from './infrastructure/database/repositories/prisma-tender.repository';
 import { BID_REPOSITORY } from './domain/repositories/bid.repository.interface';
 import { PrismaBidRepository } from './infrastructure/database/repositories/prisma-bid.repository';
+import { EVALUATION_REPOSITORY } from './domain/repositories/evaluation.repository.interface';
+import { PrismaEvaluationRepository } from './infrastructure/database/repositories/prisma-evaluation.repository';
+import { AWARD_REPOSITORY } from './domain/repositories/award.repository.interface';
+import { PrismaAwardRepository } from './infrastructure/database/repositories/prisma-award.repository';
 
 // Security Ports & Services
 import { PASSWORD_HASHER } from './application/ports/password-hasher.port';
@@ -47,6 +51,14 @@ import { SubmitBidUseCase } from './application/use-cases/bids/submit-bid.use-ca
 import { GetMyBidsUseCase } from './application/use-cases/bids/get-my-bids.use-case';
 import { GetBidDetailsUseCase } from './application/use-cases/bids/get-bid-details.use-case';
 import { WithdrawBidUseCase } from './application/use-cases/bids/withdraw-bid.use-case';
+import { SubmitEvaluationUseCase } from './application/use-cases/bids/submit-evaluation.use-case';
+import { GetTenderEvaluationSummaryUseCase } from './application/use-cases/bids/get-tender-evaluation-summary.use-case';
+
+// Use Cases - Phase 4 Tender Opening & Awarding
+import { OpenTenderBidsUseCase } from './application/use-cases/tenders/open-tender-bids.use-case';
+import { GetOpenedTenderBidsUseCase } from './application/use-cases/tenders/get-opened-tender-bids.use-case';
+import { AwardTenderUseCase } from './application/use-cases/tenders/award-tender.use-case';
+import { GetTenderAwardUseCase } from './application/use-cases/tenders/get-tender-award.use-case';
 
 // Guards
 import { JwtAuthGuard } from './presentation/rest/guards/jwt-auth.guard';
@@ -58,6 +70,8 @@ import { AuthController } from './presentation/rest/controllers/auth.controller'
 import { OrganizationController } from './presentation/rest/controllers/organization.controller';
 import { TenderController } from './presentation/rest/controllers/tender.controller';
 import { BidController } from './presentation/rest/controllers/bid.controller';
+import { EvaluationController } from './presentation/rest/controllers/evaluation.controller';
+import { AwardController } from './presentation/rest/controllers/award.controller';
 
 @Module({
   imports: [
@@ -75,6 +89,8 @@ import { BidController } from './presentation/rest/controllers/bid.controller';
     OrganizationController,
     TenderController,
     BidController,
+    EvaluationController,
+    AwardController,
   ],
   providers: [
     PrismaService,
@@ -97,6 +113,14 @@ import { BidController } from './presentation/rest/controllers/bid.controller';
     {
       provide: BID_REPOSITORY,
       useClass: PrismaBidRepository,
+    },
+    {
+      provide: EVALUATION_REPOSITORY,
+      useClass: PrismaEvaluationRepository,
+    },
+    {
+      provide: AWARD_REPOSITORY,
+      useClass: PrismaAwardRepository,
     },
     {
       provide: PASSWORD_HASHER,
@@ -129,6 +153,13 @@ import { BidController } from './presentation/rest/controllers/bid.controller';
     GetMyBidsUseCase,
     GetBidDetailsUseCase,
     WithdrawBidUseCase,
+    // Phase 4 Evaluation & Award Use Cases
+    SubmitEvaluationUseCase,
+    GetTenderEvaluationSummaryUseCase,
+    OpenTenderBidsUseCase,
+    GetOpenedTenderBidsUseCase,
+    AwardTenderUseCase,
+    GetTenderAwardUseCase,
     // Guards
     JwtAuthGuard,
     RolesGuard,
@@ -140,6 +171,8 @@ import { BidController } from './presentation/rest/controllers/bid.controller';
     ORGANIZATION_REPOSITORY,
     TENDER_REPOSITORY,
     BID_REPOSITORY,
+    EVALUATION_REPOSITORY,
+    AWARD_REPOSITORY,
   ],
 })
 export class AppModule {}
