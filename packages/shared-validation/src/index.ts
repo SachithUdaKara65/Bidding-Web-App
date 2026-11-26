@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRole, OrganizationType, TenderStatus } from '@procurement/shared-types';
+import { UserRole, UserStatus, OrganizationType, TenderStatus } from '@procurement/shared-types';
 
 // Auth Validation Schemas
 export const registerSchema = z.object({
@@ -192,3 +192,68 @@ export const awardTenderSchema = z.object({
 });
 
 export type AwardTenderInput = z.infer<typeof awardTenderSchema>;
+
+// Phase 5: Document Management Validation Schemas
+export const generateUploadUrlSchema = z.object({
+  bucket: z.enum(['tender-documents', 'bid-submissions'], {
+    errorMap: () => ({ message: 'Bucket must be tender-documents or bid-submissions' }),
+  }),
+  fileName: z
+    .string()
+    .trim()
+    .min(1, { message: 'File name is required' })
+    .max(255),
+  fileType: z
+    .string()
+    .trim()
+    .min(1, { message: 'File type is required' })
+    .max(100),
+  fileSize: z
+    .number()
+    .positive({ message: 'File size must be positive' })
+    .max(50 * 1024 * 1024, { message: 'File size cannot exceed 50MB' }),
+  tenderId: z.string().uuid({ message: 'Valid tender ID is required' }).optional(),
+  bidId: z.string().uuid({ message: 'Valid bid ID is required' }).optional(),
+  documentType: z.string().trim().max(100).optional(),
+}).refine(
+  (data) => {
+    if (data.bucket === 'tender-documents') return !!data.tenderId;
+    if (data.bucket === 'bid-submissions') return !!data.bidId;
+    return false;
+  },
+  {
+    message: 'tenderId is required for tender-documents, bidId is required for bid-submissions',
+    path: ['tenderId'],
+  }
+);
+
+export type GenerateUploadUrlInput = z.infer<typeof generateUploadUrlSchema>;
+
+// Phase 5: Admin Validation Schemas
+export const updateUserStatusSchema = z.object({
+  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.SUSPENDED], {
+    errorMap: () => ({ message: 'Status must be ACTIVE, INACTIVE, or SUSPENDED' }),
+  }),
+});
+
+export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;
+
+export const adminUserQuerySchema = z.object({
+  role: z.enum([UserRole.BUYER, UserRole.BIDDER, UserRole.ADMIN]).optional(),
+  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.SUSPENDED]).optional(),
+  search: z.string().trim().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+export type AdminUserQueryInput = z.infer<typeof adminUserQuerySchema>;
+
+export const auditLogQuerySchema = z.object({
+  action: z.string().trim().optional(),
+  resource: z.string().trim().optional(),
+  userId: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
+export type AuditLogQueryInput = z.infer<typeof auditLogQuerySchema>;
