@@ -167,3 +167,28 @@ export const submitBidSchema = z.object({
 });
 
 export type SubmitBidInput = z.infer<typeof submitBidSchema>;
+
+// Evaluation Validation Schemas (Phase 4)
+export const submitEvaluationSchema = z.object({
+  technicalScore: z
+    .number()
+    .min(0, { message: 'Technical score must be between 0 and 100' })
+    .max(100, { message: 'Technical score must be between 0 and 100' }),
+  financialScore: z
+    .number()
+    .min(0, { message: 'Financial score must be between 0 and 100' })
+    .max(100, { message: 'Financial score must be between 0 and 100' }),
+  comments: z.string().trim().max(2000).optional(),
+});
+
+export type SubmitEvaluationInput = z.infer<typeof submitEvaluationSchema>;
+
+// Award Validation Schema (Phase 4)
+export const awardTenderSchema = z.object({
+  winningBidId: z
+    .string()
+    .uuid({ message: 'Valid winning bid ID is required' }),
+  awardNotes: z.string().trim().max(2000).optional(),
+});
+
+export type AwardTenderInput = z.infer<typeof awardTenderSchema>;

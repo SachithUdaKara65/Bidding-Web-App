@@ -192,6 +192,7 @@ export class PrismaTenderRepository implements ITenderRepository {
           : {}),
         ...(data.submissionDeadline ? { submissionDeadline: data.submissionDeadline } : {}),
         ...(data.openingDate ? { openingDate: data.openingDate } : {}),
+        ...(data.status ? { status: data.status as any } : {}),
       },
     });
     return this.toEntity(record);
