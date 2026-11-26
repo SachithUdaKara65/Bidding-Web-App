@@ -18,12 +18,21 @@ import { EVALUATION_REPOSITORY } from './domain/repositories/evaluation.reposito
 import { PrismaEvaluationRepository } from './infrastructure/database/repositories/prisma-evaluation.repository';
 import { AWARD_REPOSITORY } from './domain/repositories/award.repository.interface';
 import { PrismaAwardRepository } from './infrastructure/database/repositories/prisma-award.repository';
+import { DOCUMENT_REPOSITORY } from './domain/repositories/document.repository.interface';
+import { PrismaDocumentRepository } from './infrastructure/database/repositories/prisma-document.repository';
+import { AUDIT_LOG_REPOSITORY } from './domain/repositories/audit-log.repository.interface';
+import { PrismaAuditLogRepository } from './infrastructure/database/repositories/prisma-audit-log.repository';
+import { ADMIN_REPOSITORY } from './domain/repositories/admin.repository.interface';
+import { PrismaAdminRepository } from './infrastructure/database/repositories/prisma-admin.repository';
 
 // Security Ports & Services
 import { PASSWORD_HASHER } from './application/ports/password-hasher.port';
 import { BcryptHasherService } from './infrastructure/security/bcrypt-hasher.service';
 import { TOKEN_SERVICE } from './application/ports/token.port';
 import { JwtTokenService } from './infrastructure/security/jwt-token.service';
+import { STORAGE_SERVICE } from './application/ports/storage.port';
+import { SupabaseStorageService } from './infrastructure/storage/supabase-storage.service';
+import { AuditLogService } from './application/services/audit-log.service';
 
 // Use Cases - Auth
 import { RegisterUserUseCase } from './application/use-cases/auth/register-user.use-case';
@@ -60,6 +69,14 @@ import { GetOpenedTenderBidsUseCase } from './application/use-cases/tenders/get-
 import { AwardTenderUseCase } from './application/use-cases/tenders/award-tender.use-case';
 import { GetTenderAwardUseCase } from './application/use-cases/tenders/get-tender-award.use-case';
 
+// Use Cases - Phase 5 Documents & Admin
+import { GenerateUploadUrlUseCase } from './application/use-cases/documents/generate-upload-url.use-case';
+import { GenerateDownloadUrlUseCase } from './application/use-cases/documents/generate-download-url.use-case';
+import { GetPlatformStatsUseCase } from './application/use-cases/admin/get-platform-stats.use-case';
+import { GetAdminUsersUseCase } from './application/use-cases/admin/get-admin-users.use-case';
+import { UpdateUserStatusUseCase } from './application/use-cases/admin/update-user-status.use-case';
+import { GetAuditLogsUseCase } from './application/use-cases/admin/get-audit-logs.use-case';
+
 // Guards
 import { JwtAuthGuard } from './presentation/rest/guards/jwt-auth.guard';
 import { RolesGuard } from './presentation/rest/guards/roles.guard';
@@ -72,6 +89,8 @@ import { TenderController } from './presentation/rest/controllers/tender.control
 import { BidController } from './presentation/rest/controllers/bid.controller';
 import { EvaluationController } from './presentation/rest/controllers/evaluation.controller';
 import { AwardController } from './presentation/rest/controllers/award.controller';
+import { DocumentController } from './presentation/rest/controllers/document.controller';
+import { AdminController } from './presentation/rest/controllers/admin.controller';
 
 @Module({
   imports: [
@@ -91,6 +110,8 @@ import { AwardController } from './presentation/rest/controllers/award.controlle
     BidController,
     EvaluationController,
     AwardController,
+    DocumentController,
+    AdminController,
   ],
   providers: [
     PrismaService,
@@ -123,6 +144,18 @@ import { AwardController } from './presentation/rest/controllers/award.controlle
       useClass: PrismaAwardRepository,
     },
     {
+      provide: DOCUMENT_REPOSITORY,
+      useClass: PrismaDocumentRepository,
+    },
+    {
+      provide: AUDIT_LOG_REPOSITORY,
+      useClass: PrismaAuditLogRepository,
+    },
+    {
+      provide: ADMIN_REPOSITORY,
+      useClass: PrismaAdminRepository,
+    },
+    {
       provide: PASSWORD_HASHER,
       useClass: BcryptHasherService,
     },
@@ -130,6 +163,11 @@ import { AwardController } from './presentation/rest/controllers/award.controlle
       provide: TOKEN_SERVICE,
       useClass: JwtTokenService,
     },
+    {
+      provide: STORAGE_SERVICE,
+      useClass: SupabaseStorageService,
+    },
+    AuditLogService,
     // Auth Use Cases
     RegisterUserUseCase,
     LoginUserUseCase,
@@ -160,6 +198,13 @@ import { AwardController } from './presentation/rest/controllers/award.controlle
     GetOpenedTenderBidsUseCase,
     AwardTenderUseCase,
     GetTenderAwardUseCase,
+    // Phase 5 Documents & Admin Use Cases
+    GenerateUploadUrlUseCase,
+    GenerateDownloadUrlUseCase,
+    GetPlatformStatsUseCase,
+    GetAdminUsersUseCase,
+    UpdateUserStatusUseCase,
+    GetAuditLogsUseCase,
     // Guards
     JwtAuthGuard,
     RolesGuard,
@@ -173,6 +218,11 @@ import { AwardController } from './presentation/rest/controllers/award.controlle
     BID_REPOSITORY,
     EVALUATION_REPOSITORY,
     AWARD_REPOSITORY,
+    DOCUMENT_REPOSITORY,
+    AUDIT_LOG_REPOSITORY,
+    ADMIN_REPOSITORY,
+    STORAGE_SERVICE,
+    AuditLogService,
   ],
 })
 export class AppModule {}

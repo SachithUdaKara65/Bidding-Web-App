@@ -263,3 +263,99 @@ export interface TenderAwardDto {
   awardNotes?: string | null;
   awardedAt: string;
 }
+
+// ─── Phase 5: Storage, Audit Logging & Admin Dashboard ─────────────────────
+
+export const StorageBucket = {
+  TENDER_DOCUMENTS: 'tender-documents',
+  BID_SUBMISSIONS: 'bid-submissions',
+} as const;
+export type StorageBucket = (typeof StorageBucket)[keyof typeof StorageBucket];
+
+export interface GenerateUploadUrlDto {
+  bucket: StorageBucket;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  tenderId?: string;
+  bidId?: string;
+  documentType?: string;
+}
+
+export interface UploadUrlResponseDto {
+  uploadUrl: string;
+  fileKey: string;
+  documentId: string;
+  bucket: StorageBucket;
+  expiresIn: number;
+}
+
+export interface DownloadUrlResponseDto {
+  downloadUrl: string;
+  fileName: string;
+  fileType: string;
+  documentId: string;
+  expiresIn: number;
+}
+
+export const AuditAction = {
+  USER_REGISTER: 'USER_REGISTER',
+  USER_LOGIN: 'USER_LOGIN',
+  LOGIN_FAILED: 'LOGIN_FAILED',
+  TENDER_CREATE: 'TENDER_CREATE',
+  TENDER_UPDATE: 'TENDER_UPDATE',
+  TENDER_PUBLISH: 'TENDER_PUBLISH',
+  TENDER_CANCEL: 'TENDER_CANCEL',
+  BID_SUBMIT: 'BID_SUBMIT',
+  BID_WITHDRAW: 'BID_WITHDRAW',
+  BID_OPEN: 'BID_OPEN',
+  BID_EVALUATE: 'BID_EVALUATE',
+  TENDER_AWARD: 'TENDER_AWARD',
+  DOCUMENT_UPLOAD: 'DOCUMENT_UPLOAD',
+  USER_STATUS_CHANGE: 'USER_STATUS_CHANGE',
+} as const;
+export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
+
+export interface AuditLogDto {
+  id: string;
+  userId: string | null;
+  userEmail?: string | null;
+  action: string;
+  resource: string;
+  resourceId: string | null;
+  details: string | null;
+  ipAddress: string | null;
+  timestamp: string;
+}
+
+export interface AuditLogQueryDto {
+  action?: string;
+  resource?: string;
+  userId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface PlatformStatsDto {
+  totalTenders: number;
+  openTenders: number;
+  underEvaluationTenders: number;
+  awardedTenders: number;
+  totalBids: number;
+  totalUsers: number;
+  totalBuyers: number;
+  totalBidders: number;
+  totalAwardedValue: number;
+}
+
+export interface AdminUserListQueryDto {
+  role?: UserRole;
+  status?: UserStatus;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface UpdateUserStatusDto {
+  status: UserStatus;
+}
